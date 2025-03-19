@@ -23,3 +23,5 @@
 
 槽位里放一个拼图就检测一次，不要等放下一个再检测
 ```
+
+![image](https://github.com/user-attachments/assets/69c57177-c798-4c74-9ee1-a398175ecf42)
