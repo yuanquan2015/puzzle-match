@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from '@emotion/styled';
+import { keyframes } from '@emotion/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TileType, GameState } from '../types/game';
 
@@ -7,42 +8,184 @@ const GameContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 10px;
+  font-family: "Comic Sans MS", "Comic Sans", cursive, "Arial Rounded MT Bold", Arial, sans-serif;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+
+  @media (max-width: 768px) {
+    padding: 5px;
+  }
+`;
+
+const sway = keyframes`
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(3deg); }
+`;
+
+const float = keyframes`
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(5deg); }
+`;
+
+const GrassDecoration = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  z-index: 1;
+  pointer-events: none;
+`;
+
+const GrassGroup = styled.div<{ $delay: number; $duration: number }>`
+  position: absolute;
+  display: flex;
+  gap: 4px;
+  transform-origin: bottom;
+  animation: ${sway} ${props => props.$duration}s infinite;
+  animation-delay: ${props => props.$delay}s;
+`;
+
+const GrassBlade = styled.div<{ $height: number }>`
+  width: 2px;
+  height: ${props => props.$height}px;
+  background: #228B22;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    background: #228B22;
+    border-radius: 50%;
+  }
+`;
+
+const Flower = styled.div<{ $delay: number; $duration: number; $color: string }>`
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: ${props => props.$color};
+  border-radius: 50%;
+  animation: ${float} ${props => props.$duration}s infinite;
+  animation-delay: ${props => props.$delay}s;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: #87CEEB;
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(135, 206, 235, 0.5);
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 3px;
+    height: 3px;
+    background: #4169E1;
+    border-radius: 50%;
+  }
 `;
 
 const Board = styled.div`
   position: relative;
   width: 900px;
   height: 700px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: linear-gradient(135deg, #98FB98 0%, #90EE90 100%);
   padding: 16px;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    height: 60vh;
+    padding: 8px;
+  }
 `;
 
 const SlotContainer = styled.div`
   display: flex;
   gap: 10px;
   padding: 15px;
-  background: rgba(255, 255, 255, 0.9);
+  background: #8B4513;
   border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   margin-bottom: 20px;
   min-height: 120px;
   align-items: center;
+  border: 4px solid #654321;
+  position: relative;
+  width: 900px;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    padding: 8px;
+    gap: 5px;
+    min-height: 80px;
+    margin-bottom: 10px;
+  }
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%);
+    border-radius: 8px;
+    pointer-events: none;
+  }
 `;
 
 const Slot = styled.div<{ $isEmpty: boolean }>`
   width: 100px;
   height: 100px;
-  border: 2px dashed ${props => props.$isEmpty ? '#aaa' : 'transparent'};
+  border: 3px solid ${props => props.$isEmpty ? '#654321' : '#8B4513'};
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${props => props.$isEmpty ? 'rgba(0, 0, 0, 0.05)' : 'white'};
+  background: ${props => props.$isEmpty ? 'rgba(0, 0, 0, 0.2)' : '#8B4513'};
   position: relative;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    width: 60px;
+    height: 60px;
+    border-width: 2px;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%);
+    border-radius: 5px;
+    pointer-events: none;
+  }
 `;
 
 const TILE_SIZE = 100; // 拼图块的大小
@@ -116,7 +259,8 @@ const Tile = styled(motion.div)<{
   display: ${props => props.$isMatched ? 'none' : 'flex'};
   align-items: center;
   justify-content: center;
-  font-size: 40px;
+  font-size: 48px;
+  font-family: "Comic Sans MS", "Comic Sans", cursive, "Arial Rounded MT Bold", Arial, sans-serif;
   background: ${props => props.$isSelected ? '#ffd700' : 'white'};
   border-radius: ${props => {
     switch (props.$puzzleType) {
@@ -134,8 +278,16 @@ const Tile = styled(motion.div)<{
   transform-origin: center center;
   z-index: ${props => props.$isSelected ? 2 : 1};
   transition: z-index 0s;
-  border: 2px solid #e0e0e0;
+  border: 3px solid #e0e0e0;
   opacity: ${props => props.$isBlocked ? 0.6 : 1};
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    width: ${TILE_SIZE * 0.6}px;
+    height: ${TILE_SIZE * 0.6}px;
+    font-size: 32px;
+    border-width: 2px;
+  }
 
   &:hover {
     z-index: ${props => props.$isBlocked ? 1 : 3};
@@ -157,9 +309,16 @@ const Tile = styled(motion.div)<{
 
 const GameStatus = styled.div`
   margin-top: 20px;
-  font-size: 24px;
+  font-size: 28px;
   font-weight: bold;
-  color: #333;
+  color: #4a4a4a;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: 1px;
+
+  @media (max-width: 768px) {
+    font-size: 24px;
+    margin-top: 10px;
+  }
 `;
 
 const GameOverOverlay = styled.div`
@@ -174,23 +333,46 @@ const GameOverOverlay = styled.div`
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 32px;
+  font-size: 36px;
   z-index: 1000;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+
+  @media (max-width: 768px) {
+    font-size: 28px;
+  }
 `;
 
 const RestartButton = styled.button`
   margin-top: 20px;
-  padding: 10px 20px;
-  font-size: 18px;
+  padding: 12px 24px;
+  font-size: 20px;
   background: #4CAF50;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 25px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  letter-spacing: 1px;
+
+  @media (max-width: 768px) {
+    padding: 10px 20px;
+    font-size: 18px;
+    margin-top: 15px;
+  }
 
   &:hover {
     background: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 `;
 
@@ -288,11 +470,18 @@ const SlotTile = styled(motion.div)`
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
+  font-size: 48px;
+  font-family: "Comic Sans MS", "Comic Sans", cursive, "Arial Rounded MT Bold", Arial, sans-serif;
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   border: 2px solid #e0e0e0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    font-size: 32px;
+    border-width: 1px;
+  }
 `;
 
 interface MatchedGroup {
@@ -417,6 +606,60 @@ const PuzzleGame: React.FC = () => {
 
   const isGameWon = gameState.matchedCount === gameState.totalTiles;
 
+  // 修改创建草和花的组合函数，使其在移动设备上更合适
+  const createGrassFlowerGroups = () => {
+    const groups = [];
+    const isMobile = window.innerWidth <= 768;
+    const grassCount = isMobile ? 8 : 12;
+    const flowerCount = isMobile ? 1 : 2;
+
+    for (let i = 0; i < grassCount; i++) {
+      const left = `${Math.random() * 100}%`;
+      const bottom = `${Math.random() * 100}%`;
+      const rotation = Math.random() * 40 - 20;
+      
+      groups.push(
+        <GrassGroup
+          key={`grass-${i}`}
+          $delay={Math.random() * 3}
+          $duration={2 + Math.random() * 3}
+          style={{
+            left,
+            bottom,
+            transform: `rotate(${rotation}deg)`
+          }}
+        >
+          <GrassBlade $height={isMobile ? 10 + Math.random() * 8 : 15 + Math.random() * 10} />
+          <GrassBlade $height={isMobile ? 12 + Math.random() * 8 : 20 + Math.random() * 10} />
+          <GrassBlade $height={isMobile ? 11 + Math.random() * 8 : 18 + Math.random() * 10} />
+        </GrassGroup>
+      );
+
+      for (let j = 0; j < flowerCount; j++) {
+        const flowerOffset = {
+          left: `${Math.random() * 40 - 20}%`,
+          bottom: `${Math.random() * 40 - 20}%`
+        };
+        groups.push(
+          <Flower
+            key={`flower-${i}-${j}`}
+            $delay={Math.random() * 3}
+            $duration={3 + Math.random() * 3}
+            $color={['#87CEEB', '#00BFFF', '#1E90FF', '#4169E1'][Math.floor(Math.random() * 4)]}
+            style={{
+              left: `calc(${left} + ${flowerOffset.left})`,
+              bottom: `calc(${bottom} + ${flowerOffset.bottom})`,
+              transform: `rotate(${Math.random() * 360}deg)`,
+              width: isMobile ? '16px' : '20px',
+              height: isMobile ? '16px' : '20px'
+            }}
+          />
+        );
+      }
+    }
+    return groups;
+  };
+
   return (
     <GameContainer>
       <SlotContainer>
@@ -427,7 +670,7 @@ const PuzzleGame: React.FC = () => {
                 initial={{ scale: 1 }}
                 animate={{ 
                   scale: matchingGroup?.indices.includes(index) ? [1, 1.1, 1] : 1,
-                  backgroundColor: matchingGroup?.indices.includes(index) ? '#ffd700' : 'white'
+                  backgroundColor: matchingGroup?.indices.includes(index) ? '#FFD700' : '#8B4513'
                 }}
                 transition={{
                   duration: 0.4,
@@ -442,6 +685,9 @@ const PuzzleGame: React.FC = () => {
         ))}
       </SlotContainer>
       <Board>
+        <GrassDecoration>
+          {createGrassFlowerGroups()}
+        </GrassDecoration>
         {isGameOver && (
           <GameOverOverlay>
             <div>游戏结束！槽位已满</div>
